@@ -23,7 +23,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class LocalizeWindow {
 
@@ -193,7 +196,7 @@ public class LocalizeWindow {
 		if (bytes < Integer.parseInt(preferences.txtMinBytes.getText()))
 			return false;
 
-		float valid = 0;
+		int valid = 0;
 
 		for (int i = 0; i < string.length(); i++) {
 			int code = string.codePointAt(i);
@@ -202,7 +205,8 @@ public class LocalizeWindow {
 				valid++;
 		}
 
-		if (valid / string.length() >= 0.70)
+		if ((valid * 100) / string.length() >= Integer
+				.parseInt(preferences.txtMinValid.getText()))
 			return true;
 		return false;
 	}
@@ -213,40 +217,32 @@ public class LocalizeWindow {
 		inFile = file;
 
 		ProgressWindow window = new ProgressWindow();
+		window.progressBar.setMinimum(0);
+		window.progressBar.setMaximum((int) inFile.length());
+
+		// to enable sorting
+		ArrayList<LocalizeableString> strings = new ArrayList<LocalizeableString>();
 
 		try {
 
-			int current = 0; // Caret location
-			int location = 0; // String location
-			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+			if (preferences.cbASCII.isSelected())
+				directImport(file, window, strings,
+						LocalizeableString.Encoding.ASCII);
+			if (preferences.cbUTF8.isSelected())
+				directImport(file, window, strings,
+						LocalizeableString.Encoding.UTF8);
+			if (preferences.cbShiftJIS.isSelected())
+				directImport(file, window, strings,
+						LocalizeableString.Encoding.SHIFTJIS);
 
-			// Read SHIFTJIS
-
-			FileInputStream in = new FileInputStream(file);
-			int c = -1;
-			while ((c = in.read()) >= 0) {
-
-				if (c == 0x00) {
-					String string = new String(buffer.toByteArray(),
-							"Shift_JIS");
-
-					if (isValidString(buffer.size(), string)) {
-						LocalizeableString lstring = new LocalizeableString(
-								location, buffer.size(),
-								LocalizeableString.Encoding.SHIFTJIS, string);
-						((LocalizeTableModel) table.getModel()).addRow(lstring);
-					}
-
-					// Reset
-					location = current + 1;
-					buffer.reset();
-				} else {
-					buffer.write(c);
+			Collections.sort(strings, new Comparator<LocalizeableString>() {
+				@Override
+				public int compare(LocalizeableString arg0,
+						LocalizeableString arg1) {
+					return arg0.location - arg1.location;
 				}
-
-				current++;
-			}
-			in.close();
+			});
+			table.setModel(new LocalizeTableModel(strings));
 
 			window.setVisible(false);
 
@@ -255,8 +251,44 @@ public class LocalizeWindow {
 		}
 	}
 
+	private void directImport(File file, ProgressWindow window,
+			ArrayList<LocalizeableString> strings,
+			LocalizeableString.Encoding encoding) throws IOException {
+		int current = 0; // Caret location
+		int location = 0; // String location
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+		FileInputStream in = new FileInputStream(file);
+		int c = -1;
+		while ((c = in.read()) >= 0) {
+			window.progressBar.setValue(current);
+
+			if (c == 0x00) {
+				String string = new String(buffer.toByteArray(),
+						encoding.getCharset());
+
+				if (isValidString(buffer.size(), string)) {
+					LocalizeableString lstring = new LocalizeableString(
+							location, buffer.size(), encoding, string);
+					strings.add(lstring);
+				}
+
+				// Reset
+				location = current + 1;
+				buffer.reset();
+			} else {
+				buffer.write(c);
+			}
+
+			current++;
+		}
+		in.close();
+	}
+
 	private void exportFile(File file) {
 		ProgressWindow window = new ProgressWindow();
+		window.progressBar.setMinimum(0);
+		window.progressBar.setMaximum((int) inFile.length());
 
 		try {
 
@@ -269,6 +301,7 @@ public class LocalizeWindow {
 
 			int c = -1;
 			while ((c = in.read()) >= 0) {
+				window.progressBar.setValue(current);
 
 				boolean found = false;
 				for (LocalizeableString string : strings) {

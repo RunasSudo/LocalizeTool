@@ -23,16 +23,18 @@ public class LocalizeableString {
 
 	public static enum Encoding {
 
-		UCS2LE("UCS-2 (LE)"), SHIFTJIS("Shift JIS");
+		ASCII("US-ASCII"), UTF8("UTF-8"), SHIFTJIS("Shift_JIS"), UCS2LE(
+				"UCS-2LE"), UCS2BE("UCS-2BE"), UTF16LE("UTF-16LE"), UTF16BE(
+				"UTF-16BE");
 
-		private String pretty;
+		private String charset;
 
-		Encoding(String pretty) {
-			this.pretty = pretty;
+		Encoding(String charset) {
+			this.charset = charset;
 		}
 
-		public String getPrettyName() {
-			return pretty;
+		public String getCharset() {
+			return charset;
 		}
 
 	}

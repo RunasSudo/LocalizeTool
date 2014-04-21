@@ -30,6 +30,7 @@ public class PreferencesWindow extends JFrame {
 	public JCheckBox cbExtendedLatin;
 	public JCheckBox cbCJK;
 	public JTextField txtMinBytes;
+	public JTextField txtMinValid;
 
 	/**
 	 * Create the frame.
@@ -92,13 +93,13 @@ public class PreferencesWindow extends JFrame {
 
 		JPanel pnFilter = new JPanel();
 		JScrollPane spFilter = new JScrollPane(pnFilter);
-		pnFilter.setLayout(new FormLayout(
-				new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
-						ColumnSpec.decode("default:grow"),
-						FormFactory.RELATED_GAP_COLSPEC,
-						FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC, }));
+		pnFilter.setLayout(new FormLayout(new ColumnSpec[] {
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"), }, new RowSpec[] {
+				FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC, }));
 
 		JLabel lblMinimumLength = new JLabel("Minimum Bytes");
 		pnFilter.add(lblMinimumLength, "2, 2, left, default");
@@ -107,6 +108,14 @@ public class PreferencesWindow extends JFrame {
 		txtMinBytes.setText("4");
 		pnFilter.add(txtMinBytes, "4, 2, fill, default");
 		txtMinBytes.setColumns(10);
+
+		JLabel lblMinimumValid = new JLabel("Minimum % Valid");
+		pnFilter.add(lblMinimumValid, "2, 4, left, default");
+
+		txtMinValid = new JTextField();
+		txtMinValid.setText("90");
+		pnFilter.add(txtMinValid, "4, 4, fill, default");
+		txtMinValid.setColumns(10);
 		tabbedPane.addTab("Filter", null, spFilter, null);
 
 		JPanel pnBlocks = new JPanel();

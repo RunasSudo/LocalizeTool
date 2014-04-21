@@ -11,8 +11,8 @@ import javax.swing.JLabel;
 public class ProgressWindow extends JFrame {
 
 	private JPanel contentPane;
-	private JLabel label;
-	private JProgressBar progressBar;
+	public JLabel label;
+	public JProgressBar progressBar;
 
 	/**
 	 * Create the frame.

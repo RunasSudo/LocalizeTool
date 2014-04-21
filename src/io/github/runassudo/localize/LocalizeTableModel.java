@@ -6,7 +6,15 @@ import javax.swing.table.AbstractTableModel;
 
 public class LocalizeTableModel extends AbstractTableModel {
 
-	private ArrayList<LocalizeableString> strings = new ArrayList<LocalizeableString>();
+	private ArrayList<LocalizeableString> strings;
+
+	public LocalizeTableModel() {
+		this.strings = new ArrayList<LocalizeableString>();
+	}
+
+	public LocalizeTableModel(ArrayList<LocalizeableString> strings) {
+		this.strings = strings;
+	}
 
 	@Override
 	public String getColumnName(int col) {
