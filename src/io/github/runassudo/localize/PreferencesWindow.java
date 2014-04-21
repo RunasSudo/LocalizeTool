@@ -21,8 +21,6 @@ public class PreferencesWindow extends JFrame {
 	public JCheckBox cbASCII;
 	public JCheckBox cbUTF8;
 	public JCheckBox cbShiftJIS;
-	public JCheckBox cbUCS2LE;
-	public JCheckBox cbUCS2BE;
 	public JCheckBox cbUTF16LE;
 	public JCheckBox cbUTF16BE;
 	public JCheckBox cbControls;
@@ -50,23 +48,20 @@ public class PreferencesWindow extends JFrame {
 		JPanel pnEncodings = new JPanel();
 		JScrollPane spEncodings = new JScrollPane(pnEncodings);
 		tabbedPane.addTab("Encodings", null, spEncodings, null);
-		pnEncodings.setLayout(new FormLayout(
-				new ColumnSpec[] { FormFactory.RELATED_GAP_COLSPEC,
-						FormFactory.DEFAULT_COLSPEC, }, new RowSpec[] {
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC,
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC,
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC,
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC,
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC,
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC,
-						FormFactory.RELATED_GAP_ROWSPEC,
-						FormFactory.DEFAULT_ROWSPEC, }));
+		pnEncodings.setLayout(new FormLayout(new ColumnSpec[] {
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,},
+			new RowSpec[] {
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,}));
 
 		cbASCII = new JCheckBox("ASCII");
 		pnEncodings.add(cbASCII, "2, 2");
@@ -77,19 +72,13 @@ public class PreferencesWindow extends JFrame {
 		cbShiftJIS = new JCheckBox("Shift JIS");
 		cbShiftJIS.setSelected(true);
 		pnEncodings.add(cbShiftJIS, "2, 6");
-
-		cbUCS2LE = new JCheckBox("UCS-2 (LE)");
-		cbUCS2LE.setSelected(true);
-		pnEncodings.add(cbUCS2LE, "2, 8");
-
-		cbUCS2BE = new JCheckBox("UCS-2 (BE)");
-		pnEncodings.add(cbUCS2BE, "2, 10");
-
-		cbUTF16LE = new JCheckBox("UTF-16 (LE)");
-		pnEncodings.add(cbUTF16LE, "2, 12");
-
-		cbUTF16BE = new JCheckBox("UTF-16 (BE)");
-		pnEncodings.add(cbUTF16BE, "2, 14");
+		
+				cbUTF16LE = new JCheckBox("UTF-16 (LE)");
+				cbUTF16LE.setSelected(true);
+				pnEncodings.add(cbUTF16LE, "2, 8");
+		
+				cbUTF16BE = new JCheckBox("UTF-16 (BE)");
+				pnEncodings.add(cbUTF16BE, "2, 10");
 
 		JPanel pnFilter = new JPanel();
 		JScrollPane spFilter = new JScrollPane(pnFilter);

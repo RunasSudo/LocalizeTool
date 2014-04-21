@@ -23,9 +23,8 @@ public class LocalizeableString {
 
 	public static enum Encoding {
 
-		ASCII("US-ASCII"), UTF8("UTF-8"), SHIFTJIS("Shift_JIS"), UCS2LE(
-				"UCS-2LE"), UCS2BE("UCS-2BE"), UTF16LE("UTF-16LE"), UTF16BE(
-				"UTF-16BE");
+		ASCII("US-ASCII"), UTF8("UTF-8"), SHIFTJIS("Shift_JIS"), UTF16LE(
+				"UTF-16LE"), UTF16BE("UTF-16BE");
 
 		private String charset;
 
