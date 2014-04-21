@@ -2,7 +2,7 @@ package io.github.runassudo.localize;
 
 public class LocalizeableString {
 
-	public int location;
+	public int location, length; // length in bytes
 	public Encoding encoding;
 	public String original;
 	public String translation;
@@ -12,8 +12,10 @@ public class LocalizeableString {
 	public LocalizeableString() {
 	}
 
-	public LocalizeableString(int location, Encoding encoding, String original) {
+	public LocalizeableString(int location, int length, Encoding encoding,
+			String original) {
 		this.location = location;
+		this.length = length;
 		this.encoding = encoding;
 		this.original = original;
 		this.translation = original;

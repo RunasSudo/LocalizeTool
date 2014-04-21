@@ -22,6 +22,8 @@ import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
 
 public class LocalizeWindow {
 
@@ -84,7 +86,7 @@ public class LocalizeWindow {
 		mntmImport.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				final JFileChooser fc = new JFileChooser();
+				final JFileChooser fc = new JFileChooser(".");
 				if (fc.showOpenDialog(frmLocalizeTool) == JFileChooser.APPROVE_OPTION) {
 					new Thread(new Runnable() {
 						@Override
@@ -98,6 +100,20 @@ public class LocalizeWindow {
 		mnFile.add(mntmImport);
 
 		JMenuItem mntmExport = new JMenuItem("Export…");
+		mntmExport.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				final JFileChooser fc = new JFileChooser(".");
+				if (fc.showSaveDialog(frmLocalizeTool) == JFileChooser.APPROVE_OPTION) {
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							exportFile(fc.getSelectedFile());
+						}
+					}).start();
+				}
+			}
+		});
 		mnFile.add(mntmExport);
 
 		JMenu mnEdit = new JMenu("Edit");
@@ -138,13 +154,45 @@ public class LocalizeWindow {
 	}
 
 	private boolean isValidChar(int code) {
-		if (code >= 0x0020 && code <= 0x007E)
+		if (preferences.cbControls.isSelected()
+				&& (code == 0x0009 || code == 0x000A || code == 000D))
+			return true; // Textual Controls
+
+		if (preferences.cbBasicLatin.isSelected() && code >= 0x0020
+				&& code <= 0x007E)
 			return true; // Basic Latin
+
+		if (preferences.cbExtendedLatin.isSelected() && code >= 0x00A0
+				&& code <= 0x00FF)
+			return true; // Latin-1 Supplement
+		if (preferences.cbExtendedLatin.isSelected() && code >= 0x0100
+				&& code <= 0x017F)
+			return true; // Latin Extended-A
+		if (preferences.cbExtendedLatin.isSelected() && code >= 0x0180
+				&& code <= 0x024F)
+			return true; // Latin Extended-B
+
+		if (preferences.cbCJK.isSelected() && code >= 0x4E00 && code <= 0x9FFF)
+			return true; // CJK Unified Ideographs
+		if (preferences.cbCJK.isSelected() && code >= 0x3400 && code <= 0x4DBF)
+			return true; // CJK Unified Ideographs Extension A
+		if (preferences.cbCJK.isSelected() && code >= 0x20000
+				&& code <= 0x2A6DF)
+			return true; // CJK Unified Ideographs Extension B
+		if (preferences.cbCJK.isSelected() && code >= 0x2A700
+				&& code <= 0x2B73F)
+			return true; // CJK Unified Ideographs Extension C
+		if (preferences.cbCJK.isSelected() && code >= 0x2B740
+				&& code <= 0x2B81F)
+			return true; // CJK Unified Ideographs Extension D
 
 		return false;
 	}
 
-	private boolean isValidString(String string) {
+	private boolean isValidString(int bytes, String string) {
+		if (bytes < Integer.parseInt(preferences.txtMinBytes.getText()))
+			return false;
+
 		float valid = 0;
 
 		for (int i = 0; i < string.length(); i++) {
@@ -159,7 +207,11 @@ public class LocalizeWindow {
 		return false;
 	}
 
+	private File inFile;
+
 	private void importFile(File file) {
+		inFile = file;
+
 		ProgressWindow window = new ProgressWindow();
 
 		try {
@@ -173,14 +225,15 @@ public class LocalizeWindow {
 			FileInputStream in = new FileInputStream(file);
 			int c = -1;
 			while ((c = in.read()) >= 0) {
+
 				if (c == 0x00) {
 					String string = new String(buffer.toByteArray(),
 							"Shift_JIS");
 
-					if (isValidString(string)) {
+					if (isValidString(buffer.size(), string)) {
 						LocalizeableString lstring = new LocalizeableString(
-								location, LocalizeableString.Encoding.SHIFTJIS,
-								buffer.toString());
+								location, buffer.size(),
+								LocalizeableString.Encoding.SHIFTJIS, string);
 						((LocalizeTableModel) table.getModel()).addRow(lstring);
 					}
 
@@ -194,6 +247,65 @@ public class LocalizeWindow {
 				current++;
 			}
 			in.close();
+
+			window.setVisible(false);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void exportFile(File file) {
+		ProgressWindow window = new ProgressWindow();
+
+		try {
+
+			int current = 0; // Caret location
+
+			FileInputStream in = new FileInputStream(inFile);
+			FileOutputStream out = new FileOutputStream(file);
+			ArrayList<LocalizeableString> strings = ((LocalizeTableModel) table
+					.getModel()).getStrings();
+
+			int c = -1;
+			while ((c = in.read()) >= 0) {
+
+				boolean found = false;
+				for (LocalizeableString string : strings) {
+					if (string.location == current && string.edited) {
+						byte[] bytes = null;
+
+						if (string.encoding == LocalizeableString.Encoding.SHIFTJIS) {
+							bytes = string.translation.getBytes("Shift_JIS");
+						}
+
+						out.write(bytes);
+
+						if (bytes.length < string.length) {
+							int pad = string.length - bytes.length;
+							for (int i = 0; i < pad; i++) {
+								out.write(0);
+							}
+						}
+
+						found = true;
+
+						for (int i = 0; i < string.length - 1; i++) {
+							in.read();
+						}
+
+						break;
+					}
+				}
+
+				if (!found) {
+					out.write(c);
+				}
+
+				current++;
+			}
+			in.close();
+			out.close();
 
 			window.setVisible(false);
 

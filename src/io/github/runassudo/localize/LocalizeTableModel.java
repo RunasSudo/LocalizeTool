@@ -61,7 +61,7 @@ public class LocalizeTableModel extends AbstractTableModel {
 			return string.original;
 		case 3:
 			return string.translation;
-		case 4: // internal use
+		case 4:
 			return string.edited;
 		}
 		return null;
@@ -76,13 +76,25 @@ public class LocalizeTableModel extends AbstractTableModel {
 	public void setValueAt(Object value, int row, int col) {
 		LocalizeableString string = strings.get(row);
 
-		if (col == 3)
+		if (col == 3) {
 			string.translation = value.toString();
+
+			if (string.translation.equals(string.original))
+				string.edited = false;
+			else
+				string.edited = true;
+
+			fireTableRowsUpdated(row, row);
+		}
 	}
 
 	public void addRow(LocalizeableString string) {
 		strings.add(string);
 		fireTableRowsInserted(strings.size() - 1, strings.size() - 1);
+	}
+
+	public ArrayList<LocalizeableString> getStrings() {
+		return strings;
 	}
 
 }
