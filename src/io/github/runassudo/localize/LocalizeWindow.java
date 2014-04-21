@@ -16,20 +16,19 @@ import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.JScrollPane;
-import javax.swing.AbstractAction;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 
-import javax.swing.Action;
-
 public class LocalizeWindow {
+
+	private PreferencesWindow preferences = new PreferencesWindow();
 
 	private JFrame frmLocalizeTool;
 	private JTable table;
-	private final Action action = new ImportAction();
 
 	/**
 	 * Launch the application.
@@ -82,7 +81,20 @@ public class LocalizeWindow {
 		mnFile.add(separator);
 
 		JMenuItem mntmImport = new JMenuItem("Import…");
-		mntmImport.setAction(action);
+		mntmImport.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				final JFileChooser fc = new JFileChooser();
+				if (fc.showOpenDialog(frmLocalizeTool) == JFileChooser.APPROVE_OPTION) {
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							importFile(fc.getSelectedFile());
+						}
+					}).start();
+				}
+			}
+		});
 		mnFile.add(mntmImport);
 
 		JMenuItem mntmExport = new JMenuItem("Export…");
@@ -98,6 +110,12 @@ public class LocalizeWindow {
 		mnEdit.add(separator_1);
 
 		JMenuItem mntmPreferences = new JMenuItem("Preferences…");
+		mntmPreferences.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				preferences.setVisible(true);
+			}
+		});
 		mnEdit.add(mntmPreferences);
 
 		table = new JTable(new LocalizeTableModel()) {
@@ -181,25 +199,6 @@ public class LocalizeWindow {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-	}
-
-	private class ImportAction extends AbstractAction {
-		public ImportAction() {
-			putValue(NAME, "Import…");
-			putValue(SHORT_DESCRIPTION, "Import a binary file");
-		}
-
-		public void actionPerformed(ActionEvent e) {
-			final JFileChooser fc = new JFileChooser();
-			if (fc.showOpenDialog(frmLocalizeTool) == JFileChooser.APPROVE_OPTION) {
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						importFile(fc.getSelectedFile());
-					}
-				}).start();
-			}
 		}
 	}
 }
