@@ -1,6 +1,8 @@
 package io.github.runassudo.localize;
 
-public class LocalizeableString {
+import java.io.Serializable;
+
+public class LocalizableString implements Serializable {
 
 	public int location, length; // length in bytes
 	public Encoding encoding;
@@ -9,10 +11,10 @@ public class LocalizeableString {
 
 	public boolean edited;
 
-	public LocalizeableString() {
+	public LocalizableString() {
 	}
 
-	public LocalizeableString(int location, int length, Encoding encoding,
+	public LocalizableString(int location, int length, Encoding encoding,
 			String original) {
 		this.location = location;
 		this.length = length;

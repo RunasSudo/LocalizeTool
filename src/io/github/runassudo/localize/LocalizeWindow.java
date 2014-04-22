@@ -12,18 +12,24 @@ import java.awt.BorderLayout;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.JScrollPane;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -74,12 +80,35 @@ public class LocalizeWindow {
 		menuBar.add(mnFile);
 
 		JMenuItem mntmOpen = new JMenuItem("Open…");
+		mntmOpen.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				final JFileChooser fc = new JFileChooser(".");
+				if (fc.showOpenDialog(frmLocalizeTool) == JFileChooser.APPROVE_OPTION) {
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							openFile(fc.getSelectedFile());
+						}
+					}).start();
+				}
+			}
+		});
 		mnFile.add(mntmOpen);
 
-		JMenuItem mntmSave = new JMenuItem("Save");
-		mnFile.add(mntmSave);
-
 		JMenuItem mntmSaveAs = new JMenuItem("Save As…");
+		mntmSaveAs.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				final JFileChooser fc = new JFileChooser(".");
+				if (fc.showSaveDialog(frmLocalizeTool) == JFileChooser.APPROVE_OPTION) {
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							saveFile(fc.getSelectedFile());
+						}
+					}).start();
+				}
+			}
+		});
 		mnFile.add(mntmSaveAs);
 
 		JSeparator separator = new JSeparator();
@@ -123,6 +152,25 @@ public class LocalizeWindow {
 		menuBar.add(mnEdit);
 
 		JMenuItem mntmFindReplace = new JMenuItem("Find/Replace…");
+		mntmFindReplace.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String query = JOptionPane.showInputDialog(frmLocalizeTool,
+						"Query: ", "Find", JOptionPane.QUESTION_MESSAGE);
+
+				for (int i = (table.getSelectedRow() >= 0 ? table
+						.getSelectedRow() : 0); i < table.getRowCount(); i++) {
+					if (((String) table.getValueAt(i, 3)).contains(query)) {
+						table.setRowSelectionInterval(i, i);
+						table.scrollRectToVisible(table.getCellRect(i, 0, true));
+						return;
+					}
+				}
+
+				JOptionPane.showMessageDialog(frmLocalizeTool,
+						"Could not find query string.", "Find",
+						JOptionPane.ERROR_MESSAGE);
+			}
+		});
 		mnEdit.add(mntmFindReplace);
 
 		JSeparator separator_1 = new JSeparator();
@@ -221,41 +269,47 @@ public class LocalizeWindow {
 		window.progressBar.setMaximum((int) inFile.length());
 
 		// to enable sorting
-		ArrayList<LocalizeableString> strings = new ArrayList<LocalizeableString>();
+		final ArrayList<LocalizableString> strings = new ArrayList<LocalizableString>();
 
 		try {
 
 			if (preferences.cbASCII.isSelected())
 				directImport(file, window, strings,
-						LocalizeableString.Encoding.ASCII, 0);
+						LocalizableString.Encoding.ASCII, 0);
 			if (preferences.cbUTF8.isSelected())
 				directImport(file, window, strings,
-						LocalizeableString.Encoding.UTF8, 0);
+						LocalizableString.Encoding.UTF8, 0);
 			if (preferences.cbShiftJIS.isSelected())
 				directImport(file, window, strings,
-						LocalizeableString.Encoding.SHIFTJIS, 0);
+						LocalizableString.Encoding.SHIFTJIS, 0);
 
 			if (preferences.cbUTF16LE.isSelected()) {
 				direct2Import(file, window, strings,
-						LocalizeableString.Encoding.UTF16LE, 0);
+						LocalizableString.Encoding.UTF16LE, 0);
 				direct2Import(file, window, strings,
-						LocalizeableString.Encoding.UTF16LE, 1);
+						LocalizableString.Encoding.UTF16LE, 1);
 			}
 			if (preferences.cbUTF16BE.isSelected()) {
 				direct2Import(file, window, strings,
-						LocalizeableString.Encoding.UTF16BE, 0);
+						LocalizableString.Encoding.UTF16BE, 0);
 				direct2Import(file, window, strings,
-						LocalizeableString.Encoding.UTF16BE, 1);
+						LocalizableString.Encoding.UTF16BE, 1);
 			}
 
-			Collections.sort(strings, new Comparator<LocalizeableString>() {
+			Collections.sort(strings, new Comparator<LocalizableString>() {
 				@Override
-				public int compare(LocalizeableString arg0,
-						LocalizeableString arg1) {
+				public int compare(LocalizableString arg0,
+						LocalizableString arg1) {
 					return arg0.location - arg1.location;
 				}
 			});
-			table.setModel(new LocalizeTableModel(strings));
+
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					table.setModel(new LocalizeTableModel(strings));
+				}
+			});
 
 			window.setVisible(false);
 
@@ -265,8 +319,8 @@ public class LocalizeWindow {
 	}
 
 	private void directImport(File file, ProgressWindow window,
-			ArrayList<LocalizeableString> strings,
-			LocalizeableString.Encoding encoding, int skip) throws IOException {
+			ArrayList<LocalizableString> strings,
+			LocalizableString.Encoding encoding, int skip) throws IOException {
 		window.label.setText("Scanning " + encoding);
 
 		int current = 0; // Caret location
@@ -289,8 +343,8 @@ public class LocalizeWindow {
 						encoding.getCharset());
 
 				if (isValidString(buffer.size(), string)) {
-					LocalizeableString lstring = new LocalizeableString(
-							location, buffer.size(), encoding, string);
+					LocalizableString lstring = new LocalizableString(location,
+							buffer.size(), encoding, string);
 					strings.add(lstring);
 				}
 
@@ -307,8 +361,8 @@ public class LocalizeWindow {
 	}
 
 	private void direct2Import(File file, ProgressWindow window,
-			ArrayList<LocalizeableString> strings,
-			LocalizeableString.Encoding encoding, int skip) throws IOException {
+			ArrayList<LocalizableString> strings,
+			LocalizableString.Encoding encoding, int skip) throws IOException {
 		window.label.setText("Scanning " + encoding);
 
 		int current = 0; // Caret location
@@ -332,7 +386,7 @@ public class LocalizeWindow {
 							encoding.getCharset());
 
 					if (isValidString(buffer.size(), string)) {
-						LocalizeableString lstring = new LocalizeableString(
+						LocalizableString lstring = new LocalizableString(
 								location, buffer.size(), encoding, string);
 						strings.add(lstring);
 					}
@@ -353,6 +407,12 @@ public class LocalizeWindow {
 
 	private void exportFile(File file) {
 		ProgressWindow window = new ProgressWindow();
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+
+			}
+		});
 		window.progressBar.setMinimum(0);
 		window.progressBar.setMaximum((int) inFile.length());
 
@@ -362,7 +422,7 @@ public class LocalizeWindow {
 
 			FileInputStream in = new FileInputStream(inFile);
 			FileOutputStream out = new FileOutputStream(file);
-			ArrayList<LocalizeableString> strings = ((LocalizeTableModel) table
+			ArrayList<LocalizableString> strings = ((LocalizeTableModel) table
 					.getModel()).getStrings();
 
 			int c = -1;
@@ -370,7 +430,7 @@ public class LocalizeWindow {
 				window.progressBar.setValue(current);
 
 				boolean found = false;
-				for (LocalizeableString string : strings) {
+				for (LocalizableString string : strings) {
 					if (string.location == current && string.edited) {
 						byte[] bytes = null;
 
@@ -407,6 +467,51 @@ public class LocalizeWindow {
 			out.close();
 
 			window.setVisible(false);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void openFile(File file) {
+		try {
+
+			FileInputStream fis = new FileInputStream(file);
+
+			DataInputStream dis = new DataInputStream(fis);
+			inFile = new File(dis.readUTF());
+
+			ObjectInputStream ois = new ObjectInputStream(dis);
+			final ArrayList<LocalizableString> strings = (ArrayList<LocalizableString>) ois
+					.readObject();
+			fis.close();
+
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					table.setModel(new LocalizeTableModel(strings));
+				}
+			});
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void saveFile(File file) {
+		try {
+
+			FileOutputStream fos = new FileOutputStream(file);
+
+			DataOutputStream dos = new DataOutputStream(fos);
+			dos.writeUTF(inFile.getPath());
+
+			ObjectOutputStream oos = new ObjectOutputStream(dos);
+			oos.writeObject(((LocalizeTableModel) table.getModel())
+					.getStrings());
+
+			fos.close();
 
 		} catch (Exception e) {
 			e.printStackTrace();

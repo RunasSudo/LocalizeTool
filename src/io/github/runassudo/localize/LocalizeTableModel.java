@@ -6,13 +6,13 @@ import javax.swing.table.AbstractTableModel;
 
 public class LocalizeTableModel extends AbstractTableModel {
 
-	private ArrayList<LocalizeableString> strings;
+	private ArrayList<LocalizableString> strings;
 
 	public LocalizeTableModel() {
-		this.strings = new ArrayList<LocalizeableString>();
+		this.strings = new ArrayList<LocalizableString>();
 	}
 
-	public LocalizeTableModel(ArrayList<LocalizeableString> strings) {
+	public LocalizeTableModel(ArrayList<LocalizableString> strings) {
 		this.strings = strings;
 	}
 
@@ -37,7 +37,7 @@ public class LocalizeTableModel extends AbstractTableModel {
 		case 0:
 			return String.class;
 		case 1:
-			return LocalizeableString.Encoding.class;
+			return LocalizableString.Encoding.class;
 		case 2:
 			return String.class;
 		case 3:
@@ -58,7 +58,7 @@ public class LocalizeTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int row, int col) {
-		LocalizeableString string = strings.get(row);
+		LocalizableString string = strings.get(row);
 
 		switch (col) {
 		case 0:
@@ -82,7 +82,7 @@ public class LocalizeTableModel extends AbstractTableModel {
 
 	@Override
 	public void setValueAt(Object value, int row, int col) {
-		LocalizeableString string = strings.get(row);
+		LocalizableString string = strings.get(row);
 
 		if (col == 3) {
 			string.translation = value.toString();
@@ -96,12 +96,12 @@ public class LocalizeTableModel extends AbstractTableModel {
 		}
 	}
 
-	public void addRow(LocalizeableString string) {
+	public void addRow(LocalizableString string) {
 		strings.add(string);
 		fireTableRowsInserted(strings.size() - 1, strings.size() - 1);
 	}
 
-	public ArrayList<LocalizeableString> getStrings() {
+	public ArrayList<LocalizableString> getStrings() {
 		return strings;
 	}
 
